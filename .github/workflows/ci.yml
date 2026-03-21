@@ -46,7 +46,8 @@ jobs:
             continue-on-error: true #Don't block on lint errors early on
           - name: Build
             run: npm run build
-            env: 
+            env:
+                VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }} 
                 VITE_SUPABASE_ANNON_KEY: ${{ secrets.VITE_SUPABASE_ANNON_KEY }}
                 VITE_API_URL: ${{ secrets.VITE_API_URL }}
                 VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME }}
