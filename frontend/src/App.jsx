@@ -1,4 +1,4 @@
-import { BrowseRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuthStore } from './stores/authStore'
 
@@ -32,7 +32,7 @@ export default function App(){
   }, [theme])
 
   return (
-    <BrowseRouter>
+    <BrowserRouter>
       <Routes>
         <Route path ='/login' element={<LoginPage />} />
         <Route path ='/onboarding' element={<OnboardingPage />} />
@@ -48,6 +48,6 @@ export default function App(){
           <Route path='profile/:username' element={<ProfilePage />} />
         </Route> 
       </Routes>
-    </BrowseRouter>
+    </BrowserRouter>
   )
 }
