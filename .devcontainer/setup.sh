@@ -11,7 +11,7 @@ npm install --silent
 
 echo '--- Copying environment files ---'
 if [ ! -f /workspaces/Sync-Stream/fronend/.env]; then
-    cp /workspaces/Sync-Stream/frontend/.env.example \ 
+    cp /workspaces/Sync-Stream/frontend/.env \ 
        /workspaces/Sync-Stream/frontend/.env
     echo 'Created frontend/.env from template'
 fi
