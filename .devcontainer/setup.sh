@@ -3,7 +3,7 @@ set -e
 
 echo '--- Installing Python dependencies ---'
 cd /workspaces/Sync-Stream/backend
-pip install -r requirements.txt --quiet
+pip install -r requirements.txt --break-system-packages --quiet
 
 echo '--- Installing Node dependencies ---'
 cd /workspaces/Sync-Stream/frontend
