@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routers import users
 from dotenv import load_dotenv
 import os
 
@@ -20,6 +21,8 @@ app.add_middleware(
     allow_methods = ['*'],
     allow_headers = ['*'],
 )
+
+app.include_router(users.router) #Add this after middleware
 
 @app.get('/')
 async def health_check(): 
