@@ -3,6 +3,7 @@ uvicorn[standard]==0.29.0
 supabase==2.4.6
 python-jose[cryptography]==3.3.0
 pydantic[email]==2.7.1
+pydantic-settings==2.2.1
 cloudinary==1.40.0
 redis==5.0.4
 python-multipart==0.0.9
