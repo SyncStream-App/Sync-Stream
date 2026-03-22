@@ -42,13 +42,14 @@ jobs:
           - name: Install dependencies
             run: npm ci --legacy-peer-deps
           - name: Lint
-            run: npm run Lint
+            run: npm run lint
             continue-on-error: true #Don't block on lint errors early on
           - name: Build
             run: npm run build
             env:
                 VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }} 
-                VITE_SUPABASE_ANNON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+                VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
                 VITE_API_URL: ${{ secrets.VITE_API_URL }}
                 VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME }}
-                VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET }}
+                VITE_CLOUDINARY_AVATAR_PRESET: ${{ secrets.VITE_CLOUDINARY_AVATAR_PRESET }}
+                VITE_CLOUDINARY_VIDEO_PRESET: ${{ secrets.VITE_CLOUDINARY_VIDEO_PRESET }}

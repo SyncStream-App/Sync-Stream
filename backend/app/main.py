@@ -15,7 +15,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        os.getenv("FRONTEND_URL ", "http://localhost:5173"),
+        os.getenv("FRONTEND_URL ", "https://syncstreampwa.vercel.app/"),
     ],
     allow_credentials = True,
     allow_methods = ['*'],
