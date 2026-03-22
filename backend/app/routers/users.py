@@ -27,5 +27,5 @@ async def get_user_by_username(username: str):
         if not response.data:
             raise HTTPException(status_code=404, detail="User not found")
         return response.data
-    except Exception as e:
+    except Exception as _:
         raise HTTPException(status_code=404, detail="User not found")
