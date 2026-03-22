@@ -1,0 +1,9 @@
+line-length = 100
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "I"]   # E = style, F = pyflakes, I = import order
+ignore = [
+  "E501",   # line too long — Tailwind classnames make this noisy
+]
+fixable = ["ALL"]           # let --fix handle everything it can
