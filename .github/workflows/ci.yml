@@ -21,7 +21,7 @@ jobs:
         - name: Install dependencies
           run: pip install -r requirements.txt
         - name: Lint with ruff
-          run: pip install ruff && ruff check app/ -- fix && ruff check app/
+          run: pip install ruff && ruff check app/ --fix && ruff check app/
         - name: Type check with mypy
           run: pip install mypy && mypy app/ --ignore-missing-imports
           continue-on-error: true #Don't block on type errors early on  
