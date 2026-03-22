@@ -1,7 +1,8 @@
-# backend/app/services/supabase.py
-from supabase import create_client, Client
-from dotenv import load_dotenv
+# backend/app/services/supabase.py — correct import order
 import os
+
+from dotenv import load_dotenv
+from supabase import Client, create_client
 
 load_dotenv()
 
