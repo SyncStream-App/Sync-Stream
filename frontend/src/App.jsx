@@ -36,13 +36,16 @@ export default function App() {
   const { initAuth, theme } = useAuthStore()
 
   useEffect(() => { initAuth() }, [])
-
+  useEffect(() => {
+    const cleanup = initAuth()
+    return cleanup
+    }, [])
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
 
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter >
       <Routes>
         <Route path='/login'      element={<LoginPage />} />
         <Route path='/onboarding' element={<OnboardingPage />} />

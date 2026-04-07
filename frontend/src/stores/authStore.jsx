@@ -59,7 +59,7 @@ export const useAuthStore = create((set, get) => ({
       })
     } catch (error) {
       console.error('Auth sync error:', error)
-      set({ loading: false })
+      set({ user: null, token: null, loading: false })
     }
   },
 

@@ -12,7 +12,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         if(!loading && user) {
-            navigate(user.is_onboarded ? '/': '/onboarding', {replace: true})
+            navigate(user.username ? '/': '/onboarding', {replace: true})
         }
     }, [user, loading, navigate])
 
@@ -49,7 +49,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Card */}
-                <div className="bg=white/5 border border-white/10 rounded-2xl p-8">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
                     <h2 className="text-white text-xl font-semibold text-center mb-2">
                         Welcome back
                     </h2>
