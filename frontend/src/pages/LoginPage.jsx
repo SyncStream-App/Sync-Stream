@@ -42,8 +42,6 @@ export default function LoginPage() {
                     <h1 className="text-5xl font-bold text-brand-purple mb-2">
                         SyncStream
                     </h1>
-                    <h1>NEW LOGIN UI TEST</h1>
-
                     <p className="text-gray-400 text-lg">
                         Watch together. Chat together. Live together.
                     </p>
