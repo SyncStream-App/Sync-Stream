@@ -37,10 +37,6 @@ export default function App() {
 
   useEffect(() => { initAuth() }, [])
   useEffect(() => {
-    const cleanup = initAuth()
-    return cleanup
-    }, [])
-  useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
 
