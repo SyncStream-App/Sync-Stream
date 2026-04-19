@@ -22,6 +22,8 @@ allowed_origins = [
     frontend_url,
     "http://localhost:3000",
     "http://localhost:5173",
+    "https://syncstreampwa.vercel.app",
+    "https://sync-stream-u6em.onrender.com",
     *extra_origins,
 ]
 
