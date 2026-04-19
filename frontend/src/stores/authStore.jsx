@@ -2,7 +2,8 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://sync-stream-u6em.onrender.com'
+const API_URL =
+  import.meta.env.VITE_API_URL || 'https://sync-stream-u6em.onrender.com'
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -13,31 +14,50 @@ export const useAuthStore = create((set, get) => ({
   initAuth: async () => {
     set({ loading: true })
 
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event:', event, session?.user?.email)
+    // ✅ Step 1: Get existing session FIRST
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-      if (event === 'SIGNED_IN' && session) {
-        await get().syncWithBackend(session.access_token)
-      } else if (event === 'TOKEN_REFRESHED' && session) {
-        await get().syncWithBackend(session.access_token)
-      } else if (event === 'INITIAL_SESSION' && session) {
-        await get().syncWithBackend(session.access_token)
-      } else if (event === 'INITIAL_SESSION' && !session) {
-        set({ loading: false })
-      } else if (event === 'SIGNED_OUT') {
-        set({ user: null, token: null, loading: false })
+    if (session) {
+      console.log('Existing session:', session.user.email)
+      await get().syncWithBackend(session.access_token)
+    }
+
+    // ✅ Step 2: Listen for auth changes
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth event:', event, session?.user?.email)
+
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+          await get().syncWithBackend(session.access_token)
+        }
+
+        if (event === 'SIGNED_OUT') {
+          set({ user: null, token: null, loading: false })
+        }
       }
-    })
+    )
 
-    // Clean ?code= from URL bar — Supabase exchanges it internally, we just clean up
+    // ✅ Clean OAuth code from URL
     if (window.location.search.includes('code=')) {
       window.history.replaceState(null, '', window.location.pathname)
     }
 
-    // INITIAL_SESSION event handles everything — no manual getSession needed
-  },
+    // ✅ Stop loading ONLY if no session
+    if (!session) {
+      set({ loading: false })
+    }
+
+    // ✅ Return cleanup (important if used inside React)
+    return () => {
+      listener?.subscription?.unsubscribe()
+    }
+  }, // ✅ <-- FIXED COMMA HERE
 
   syncWithBackend: async (supabaseToken) => {
+    console.log('Calling backend with token:', supabaseToken)
+
     try {
       const response = await fetch(`${API_URL}/auth/callback`, {
         method: 'POST',
@@ -47,7 +67,9 @@ export const useAuthStore = create((set, get) => ({
 
       if (!response.ok) {
         const errorText = await response.text()
-        throw new Error(`Backend sync failed: ${response.status} — ${errorText}`)
+        throw new Error(
+          `Backend sync failed: ${response.status} — ${errorText}`
+        )
       }
 
       const data = await response.json()
@@ -68,9 +90,9 @@ export const useAuthStore = create((set, get) => ({
       provider: 'google',
       options: {
         redirectTo: window.location.origin,
-        skipBrowserRedirect: false,
-      }
+      },
     })
+
     if (error) throw error
   },
 
@@ -80,6 +102,8 @@ export const useAuthStore = create((set, get) => ({
   },
 
   toggleTheme: () => {
-    set(state => ({ theme: state.theme === 'dark' ? 'light' : 'dark' }))
+    set((state) => ({
+      theme: state.theme === 'dark' ? 'light' : 'dark',
+    }))
   },
 }))
