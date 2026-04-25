@@ -15,10 +15,15 @@ async def auth_callback(request: Request):
     Receives the Supabase session, upserts user in our users table,
     returns our own JWT.
     """
-    body = await request.json()
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
     access_token = body.get("access_token")
 
     if not access_token:
+        print("No access token received in request body")
         raise HTTPException(status_code=400, detail="No access token provided")
     
     try: 
