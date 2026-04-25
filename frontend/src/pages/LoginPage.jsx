@@ -37,7 +37,6 @@ export default function LoginPage() {
     return(
         <div className="min-h-screen bg-brand-dark flex items-center justify-center px-4">
             <div className="w-full max-w-md">
-
                 {/* Logo + Title */}
                 <div className="text-center mb-10">
                     <h1 className="text-5xl font-bold text-brand-purple mb-2">
