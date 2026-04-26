@@ -3,13 +3,17 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from app.services.supabase import supabase
 from app.services.jwt import create_access_token
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://syncstreampwa.vercel.app/")
+
+class AuthRequest(BaseModel):
+    access_token: str
     
 @router.post("/callback")
-async def auth_callback(request: Request): 
+async def auth_callback(data: AuthRequest): 
     """
     Called by frontend after Supabase handles the OAuth callback.
     Receives the Supabase session, upserts user in our users table,
@@ -17,10 +21,11 @@ async def auth_callback(request: Request):
     """
     try:
         body = await request.json()
-    except Exception:
-        body = {}
+    except Exception as e:
+        print("JSON parse error:", str(e))
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
 
-    access_token = body.get("access_token")
+    access_token = data.access_token
 
     if not access_token:
         print("No access token received in request body")

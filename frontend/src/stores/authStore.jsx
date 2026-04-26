@@ -19,7 +19,7 @@ export const useAuthStore = create((set, get) => ({
       data: { session },
     } = await supabase.auth.getSession()
 
-    if (session) {
+    if (session?.access_token) {
       console.log('Existing session:', session.user.email)
       await get().syncWithBackend(session.access_token)
     }
@@ -29,7 +29,7 @@ export const useAuthStore = create((set, get) => ({
       async (event, session) => {
         console.log('Auth event:', event, session?.user?.email)
 
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.access_token) {
           await get().syncWithBackend(session.access_token)
         }
 
