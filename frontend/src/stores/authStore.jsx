@@ -98,7 +98,7 @@ export const useAuthStore = create((set, get) => ({
 
   signOut: async () => {
     await supabase.auth.signOut()
-    set({ user: null, token: null })
+    set({ user: null, token: null, loading: false, })
   },
 
   toggleTheme: () => {

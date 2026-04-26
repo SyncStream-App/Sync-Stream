@@ -44,7 +44,7 @@ export default function App() {
     <BrowserRouter >
       <Routes>
         <Route path='/login'      element={<LoginPage />} />
-        <Route path='/onboarding' element={<OnboardingPage />} />
+        <Route path='/onboarding' element={user && user.username ? <Navigate to='/' replace /> : <OnboardingPage />} />
         <Route path='/' element={
           <ProtectedRoute>
             <AppShell />

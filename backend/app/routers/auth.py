@@ -37,7 +37,7 @@ async def auth_callback(data: AuthRequest):
         user_data = {
             "id": supabase_user.id,
             "email": supabase_user.email,
-            "avatar_url": supabase_user.user_metadata.get("avatar_url"),
+            "avatar_url": (supabase_user.user_metadata or {}).get("avatar_url"),
         }
 
         # ✅ Upsert user (no duplicates)
