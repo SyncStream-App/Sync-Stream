@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuthStore } from './stores/authStore'
+
 import LoginPage      from './pages/LoginPage'
 import OnboardingPage from './pages/OnboardingPage'
 import HomePage       from './pages/HomePage'
@@ -29,31 +30,48 @@ function ProtectedRoute({ children }) {
 
   if (!user) return <Navigate to='/login' replace />
   if (!user.username) return <Navigate to='/onboarding' replace />
+
   return children
 }
 
 export default function App() {
-  const { initAuth, theme } = useAuthStore()
+  const { initAuth, theme, user } = useAuthStore() // ✅ FIX HERE
 
-  useEffect(() => { initAuth() }, [])
+  useEffect(() => {
+    initAuth()
+  }, [])
+
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
 
   return (
-    <BrowserRouter >
+    <BrowserRouter>
       <Routes>
-        <Route path='/login'      element={<LoginPage />} />
-        <Route path='/onboarding' element={user && user.username ? <Navigate to='/' replace /> : <OnboardingPage />} />
-        <Route path='/' element={
-          <ProtectedRoute>
-            <AppShell />
-          </ProtectedRoute>
-        }>
-          <Route index                    element={<HomePage />} />
-          <Route path='rooms'             element={<RoomsPage />} />
-          <Route path='messages'          element={<MessagesPage />} />
-          <Route path='search'            element={<SearchPage />} />
+        <Route path='/login' element={<LoginPage />} />
+
+        {/* ✅ FIXED: user now exists */}
+        <Route
+          path='/onboarding'
+          element={
+            user && user.username
+              ? <Navigate to='/' replace />
+              : <OnboardingPage />
+          }
+        />
+
+        <Route
+          path='/'
+          element={
+            <ProtectedRoute>
+              <AppShell />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<HomePage />} />
+          <Route path='rooms' element={<RoomsPage />} />
+          <Route path='messages' element={<MessagesPage />} />
+          <Route path='search' element={<SearchPage />} />
           <Route path='profile/:username' element={<ProfilePage />} />
         </Route>
       </Routes>
