@@ -11,54 +11,62 @@ export const useAuthStore = create((set, get) => ({
   loading: true,
   theme: 'dark',
 
+  // ✅ Set user manually (used in onboarding)
+  setUser: (user) => set({ user }),
+
   initAuth: async () => {
     set({ loading: true })
 
-    // ✅ Step 1: Get existing session FIRST
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    try {
+      // ✅ Step 1: Get existing session
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-    if (session?.access_token) {
-      console.log('Existing session:', session.user.email)
-      await get().syncWithBackend(session.access_token)
-    }
-
-    // ✅ Step 2: Listen for auth changes
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth event:', event, session?.user?.email)
-
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.access_token) {
-          await get().syncWithBackend(session.access_token)
-        }
-
-        if (event === 'SIGNED_OUT') {
-          set({ user: null, token: null, loading: false })
-        }
+      if (session?.access_token) {
+        console.log('Existing session:', session.user.email)
+        await get().syncWithBackend(session.access_token)
+      } else {
+        set({ loading: false })
       }
-    )
 
-    // ✅ Clean OAuth code from URL
-    if (window.location.search.includes('code=')) {
-      window.history.replaceState(null, '', window.location.pathname)
-    }
+      // ✅ Step 2: Listen for auth changes
+      const { data: listener } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          console.log('Auth event:', event, session?.user?.email)
 
-    // ✅ Stop loading ONLY if no session
-    if (!session) {
-      set({ loading: false })
-    }
+          if (
+            (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') &&
+            session?.access_token
+          ) {
+            await get().syncWithBackend(session.access_token)
+          }
 
-    // ✅ Return cleanup (important if used inside React)
-    return () => {
-      listener?.subscription?.unsubscribe()
+          if (event === 'SIGNED_OUT') {
+            set({ user: null, token: null, loading: false })
+          }
+        }
+      )
+
+      // ✅ Clean OAuth code from URL
+      if (window.location.search.includes('code=')) {
+        window.history.replaceState(null, '', window.location.pathname)
+      }
+
+      // ✅ Cleanup listener (important in React useEffect)
+      return () => {
+        listener?.subscription?.unsubscribe()
+      }
+    } catch (err) {
+      console.error('initAuth error:', err)
+      set({ user: null, token: null, loading: false })
     }
-  }, // ✅ <-- FIXED COMMA HERE
+  },
 
   syncWithBackend: async (supabaseToken) => {
-    console.log('Calling backend with token:', supabaseToken)
-
     try {
+      console.log('Calling backend with token:', supabaseToken)
+
       const response = await fetch(`${API_URL}/auth/callback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,8 +105,17 @@ export const useAuthStore = create((set, get) => ({
   },
 
   signOut: async () => {
-    await supabase.auth.signOut()
-    set({ user: null, token: null, loading: false, })
+    try {
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.error('Signout error:', err)
+    }
+
+    set({
+      user: null,
+      token: null,
+      loading: false,
+    })
   },
 
   toggleTheme: () => {
