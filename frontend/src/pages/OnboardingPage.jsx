@@ -13,7 +13,7 @@ export default function OnboardingPage() {
 
   const handleSubmit = async () => {
     setError('')
-
+    console.log("TOKEN BEING SENT:", token)
     // ✅ Basic validation
     if (!username.trim()) {
       return setError('Username is required')
