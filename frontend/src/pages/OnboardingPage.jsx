@@ -13,7 +13,10 @@ export default function OnboardingPage() {
 
   const handleSubmit = async () => {
     setError('')
-    console.log("TOKEN BEING SENT:", token)
+    if (!token) {
+      setError("Token not ready. Please wait or refresh.")
+      return
+    }
     // ✅ Basic validation
     if (!username.trim()) {
       return setError('Username is required')
@@ -26,7 +29,7 @@ export default function OnboardingPage() {
     if (!token) {
       return setError('Authentication error. Please login again.')
     }
-
+    console.log("🚀 TOKEN USED IN PATCH:", token)
     try {
       setLoading(true)
 
@@ -86,7 +89,7 @@ export default function OnboardingPage() {
 
       <button
         onClick={handleSubmit}
-        disabled={loading}
+        disabled={!token || loading}
         style={{
           marginTop: '1rem',
           padding: '0.5rem 1rem',

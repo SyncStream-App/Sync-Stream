@@ -81,7 +81,8 @@ export const useAuthStore = create((set, get) => ({
       }
 
       const data = await response.json()
-
+      console.log("✅ BACKEND JWT:", data.access_token)   // ADD THIS
+      console.log("👤 USER FROM BACKEND:", data.user)   
       set({
         user: data.user,
         token: data.access_token,

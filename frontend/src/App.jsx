@@ -54,12 +54,13 @@ export default function App() {
         <Route
           path='/onboarding'
           element={
-            user && user.username
-              ? <Navigate to='/' replace />
-              : <OnboardingPage />
+            !user
+              ? <Navigate to='/login' replace />
+              : user.username
+                ? <Navigate to='/' replace />
+                : <OnboardingPage />
           }
         />
-
         <Route
           path='/'
           element={
