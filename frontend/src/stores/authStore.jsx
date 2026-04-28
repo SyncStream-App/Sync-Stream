@@ -17,6 +17,11 @@ export const useAuthStore = create((set, get) => ({
   initAuth: async () => {
     set({ loading: true })
 
+    // ✅ INIT THEME FIRST (VERY IMPORTANT)
+    const savedTheme = localStorage.getItem('theme') || 'dark'
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark')
+    set({ theme: savedTheme })
+    
     try {
       // ✅ Step 1: Get existing session
       const {
@@ -122,7 +127,10 @@ export const useAuthStore = create((set, get) => ({
   toggleTheme: () => {
     const current = get().theme
     const next = current === 'dark' ? 'light' : 'dark'
+
+    localStorage.setItem('theme', next)
     document.documentElement.classList.toggle('dark', next === 'dark')
+
     set({ theme: next })
   },
 }))
