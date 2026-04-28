@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useAuthStore } from './stores/authStore'
 
-import LoginPage      from './pages/LoginPage'
+import AuthPage      from './pages/AuthPage'
 import OnboardingPage from './pages/OnboardingPage'
 import HomePage       from './pages/HomePage'
 import RoomsPage      from './pages/RoomsPage'
@@ -48,7 +48,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path='/login' element={<LoginPage />} />
+        <Route path='/login' element={<AuthPage />} />
 
         {/* ✅ FIXED: user now exists */}
         <Route
