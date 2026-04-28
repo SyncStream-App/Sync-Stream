@@ -120,8 +120,9 @@ export const useAuthStore = create((set, get) => ({
   },
 
   toggleTheme: () => {
-    set((state) => ({
-      theme: state.theme === 'dark' ? 'light' : 'dark',
-    }))
+    const current = get().theme
+    const next = current === 'dark' ? 'light' : 'dark'
+    document.documentElement.classList.toggle('dark', next === 'dark')
+    set({ theme: next })
   },
 }))

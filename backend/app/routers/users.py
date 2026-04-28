@@ -31,6 +31,23 @@ async def get_user_by_username(username: str):
     except Exception as _:
         raise HTTPException(status_code=404, detail="User not found")
     
+@router.get("/check-username")
+async def check_username(username: str):
+    if len(username) < 3 or len(username) > 20:
+        return {"available": False}
+
+    if not username.replace("_", "").isalnum():
+        return {"available": False}
+
+    response = (
+        supabase.table("users")
+        .select("id")
+        .eq("username", username)
+        .execute()
+    )
+
+    return {"available": len(response.data) == 0}
+    
 @router.patch("/me")
 async def update_user(data: dict, user=Depends(verify_token)):
     user_id = user["sub"]
