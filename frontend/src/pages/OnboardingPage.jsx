@@ -16,7 +16,6 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // 🔍 Username availability check (debounced)
   useEffect(() => {
     const delay = setTimeout(async () => {
       if (username.length >= 3) {
@@ -37,7 +36,6 @@ export default function OnboardingPage() {
     return () => clearTimeout(delay)
   }, [username])
 
-  // ☁️ Upload to Cloudinary
   const uploadToCloudinary = async (file) => {
     const formData = new FormData()
     formData.append('file', file)
@@ -58,7 +56,6 @@ export default function OnboardingPage() {
     return data.secure_url
   }
 
-  // 📸 File validation + preview
   const handleAvatar = (file) => {
     if (!file) return
 
@@ -74,7 +71,6 @@ export default function OnboardingPage() {
     setPreview(URL.createObjectURL(file))
   }
 
-  // ✅ Submit
   const handleSubmit = async () => {
     setError('')
 
@@ -83,17 +79,14 @@ export default function OnboardingPage() {
     }
 
     if (available === false) {
-      return setError('Username is already taken')
+      return setError('Username is taken')
     }
 
     try {
       setLoading(true)
 
       let avatar_url = null
-
-      if (avatar) {
-        avatar_url = await uploadToCloudinary(avatar)
-      }
+      if (avatar) avatar_url = await uploadToCloudinary(avatar)
 
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
         method: 'PATCH',
@@ -101,16 +94,8 @@ export default function OnboardingPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          username,
-          bio,
-          avatar_url,
-        }),
+        body: JSON.stringify({ username, bio, avatar_url }),
       })
-
-      if (!res.ok) {
-        throw new Error('Failed to update profile')
-      }
 
       const data = await res.json()
 
@@ -121,43 +106,21 @@ export default function OnboardingPage() {
       })
 
       navigate('/')
-    } catch (err) {
-      console.error(err)
+    } catch {
       setError('Something went wrong')
     } finally {
       setLoading(false)
     }
   }
 
-  // ⏭️ Skip onboarding
-  const handleSkip = async () => {
-    const defaultUsername = `user_${user?.id?.slice(0, 6)}`
-
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        username: defaultUsername,
-      }),
-    })
-
-    const data = await res.json()
-
-    setUser({
-      ...(user || {}),
-      ...(data.user || {}),
-      is_onboarded: true,
-    })
-
-    navigate('/')
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brand-dark text-white px-4">
-      <div className="w-full max-w-md space-y-5">
+    <div className="min-h-screen flex items-center justify-center px-4
+      bg-white text-black
+      dark:bg-brand-dark dark:text-white">
+
+      <div className="w-full max-w-md p-6 rounded-2xl border space-y-5
+        bg-gray-100 border-gray-200
+        dark:bg-white/5 dark:border-white/10">
 
         <h1 className="text-2xl font-bold text-center text-brand-purple">
           Complete your profile
@@ -168,14 +131,16 @@ export default function OnboardingPage() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-3 rounded bg-white/10"
+          className="w-full p-3 rounded-lg
+            bg-white border border-gray-300
+            dark:bg-white/10 dark:border-white/10"
         />
 
         {available === true && (
-          <p className="text-green-400 text-sm">Username available</p>
+          <p className="text-green-500 text-sm">Available</p>
         )}
         {available === false && (
-          <p className="text-red-400 text-sm">Username taken</p>
+          <p className="text-red-500 text-sm">Taken</p>
         )}
 
         {/* Bio */}
@@ -183,40 +148,29 @@ export default function OnboardingPage() {
           placeholder="Bio (optional)"
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          className="w-full p-3 rounded bg-white/10"
+          className="w-full p-3 rounded-lg
+            bg-white border border-gray-300
+            dark:bg-white/10 dark:border-white/10"
         />
 
         {/* Avatar */}
-        <input
-          type="file"
-          onChange={(e) => handleAvatar(e.target.files[0])}
-        />
+        <input type="file" onChange={(e) => handleAvatar(e.target.files[0])} />
 
         {preview && (
           <img
             src={preview}
-            alt="preview"
-            className="w-20 h-20 rounded-full"
+            className="w-20 h-20 rounded-full object-cover"
           />
         )}
 
-        {/* Error */}
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        {/* Buttons */}
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-brand-purple p-3 rounded"
+          className="w-full bg-brand-purple text-white p-3 rounded-lg"
         >
           {loading ? 'Saving...' : 'Finish'}
-        </button>
-
-        <button
-          onClick={handleSkip}
-          className="w-full text-gray-400 text-sm"
-        >
-          Skip for now
         </button>
 
       </div>

@@ -13,24 +13,6 @@ async def get_users():
         return {"users": response.data, "count": len(response.data)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/{username}")
-async def get_user_by_username(username: str):
-    """Get a user profile by username."""
-    try:
-        response = (
-            supabase.table("users")
-            .select("id, username, avatar_url, banner_url, bio, watch_hours, badges, created_at")
-            .eq("username", username)
-            .single()
-            .execute()
-        )
-        if not response.data:
-            raise HTTPException(status_code=404, detail="User not found")
-        return response.data
-    except Exception as _:
-        raise HTTPException(status_code=404, detail="User not found")
-    
 @router.get("/check-username")
 async def check_username(username: str):
     if len(username) < 3 or len(username) > 20:
@@ -47,6 +29,21 @@ async def check_username(username: str):
     )
 
     return {"available": len(response.data) == 0}
+
+@router.get("/{username}")
+async def get_user_by_username(username: str):
+    response = (
+        supabase.table("users")
+        .select("id, username, avatar_url, banner_url, bio, watch_hours, badges, created_at")
+        .eq("username", username)
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {"user": response.data[0]}
+    
     
 @router.patch("/me")
 async def update_user(data: dict, user=Depends(verify_token)):

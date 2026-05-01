@@ -34,31 +34,23 @@ export default function AuthPage() {
     try {
       setLoadingAuth(true)
 
-      // 1️⃣ Try login
       let { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      // 2️⃣ If user doesn't exist → SIGNUP
       if (error && error.message.includes('Invalid login')) {
-        const res = await supabase.auth.signUp({
-          email,
-          password,
-        })
+        const res = await supabase.auth.signUp({ email, password })
 
-        if (res.error) {
-          throw res.error
-        }
+        if (res.error) throw res.error
 
         setInfo('Check your email to verify your account')
         return
       }
 
-      // 3️⃣ Handle other errors
       if (error) {
         if (error.message.includes('Email not confirmed')) {
-          setError('Please verify your email before logging in')
+          setError('Verify your email first')
         } else {
           setError(error.message)
         }
@@ -71,76 +63,59 @@ export default function AuthPage() {
     }
   }
 
-  const handleForgotPassword = async () => {
-    if (!email) return setError('Enter your email first')
-
-    await supabase.auth.resetPasswordForEmail(email)
-    setInfo('Password reset email sent')
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-dark">
-        <div className="w-10 h-10 border-2 border-brand-purple border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-brand-dark text-white px-4">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen flex items-center justify-center px-4
+      bg-white text-black
+      dark:bg-brand-dark dark:text-white">
 
-        <h1 className="text-4xl text-center font-bold text-brand-purple">
+      <div className="w-full max-w-md p-6 rounded-2xl border space-y-5
+        bg-gray-100 border-gray-200
+        dark:bg-white/5 dark:border-white/10">
+
+        <h1 className="text-3xl text-center font-bold text-brand-purple">
           SyncStream
         </h1>
 
-        {/* Email */}
         <input
           placeholder="Email"
-          className="w-full p-3 rounded bg-white/10"
+          className="w-full p-3 rounded-lg
+            bg-white border border-gray-300
+            dark:bg-white/10 dark:border-white/10"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
-        {/* Password */}
         <input
           type="password"
           placeholder="Password"
-          className="w-full p-3 rounded bg-white/10"
+          className="w-full p-3 rounded-lg
+            bg-white border border-gray-300
+            dark:bg-white/10 dark:border-white/10"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {/* Main Button */}
         <button
           onClick={handleAuth}
           disabled={loadingAuth}
-          className="w-full bg-brand-purple p-3 rounded"
+          className="w-full bg-brand-purple text-white p-3 rounded-lg"
         >
           {loadingAuth ? 'Processing...' : 'Continue'}
         </button>
 
-        {/* Forgot */}
-        <button
-          onClick={handleForgotPassword}
-          className="text-sm text-gray-400"
-        >
-          Forgot password?
-        </button>
+        <div className="text-center text-gray-500 dark:text-gray-400">
+          OR
+        </div>
 
-        <div className="text-center text-gray-400">OR</div>
-
-        {/* Google */}
         <button
           onClick={signInWithGoogle}
-          className="w-full bg-white text-black p-3 rounded"
+          className="w-full bg-white text-black p-3 rounded-lg border"
         >
           Continue with Google
         </button>
 
-        {/* Messages */}
-        {error && <p className="text-red-400 text-sm">{error}</p>}
-        {info && <p className="text-green-400 text-sm">{info}</p>}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {info && <p className="text-green-500 text-sm">{info}</p>}
       </div>
     </div>
   )
