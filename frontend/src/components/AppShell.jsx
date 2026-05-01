@@ -81,7 +81,7 @@ export default function AppShell() {
               <p className="font-medium">
                 {user?.username || 'New User'}
               </p>
-              <p className="text-xs text-gray-400 truncate">
+              <p className="text-gray-700 dark:text-gray-300">>
                 {user?.email}
               </p>
             </div>
