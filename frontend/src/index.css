@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth theme transition */
 html {
   transition: background-color 0.2s, color 0.2s;
 }
 
 body {
-  margin: 0;
-  font-family: Inter, system-ui, sans-serif;
+  @apply bg-brand-dark text-white font-sans;
 }
