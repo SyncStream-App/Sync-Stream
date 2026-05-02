@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/authStore'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 export default function AuthPage() {
   const { signInWithGoogle, user, loading } = useAuthStore()
@@ -9,16 +10,19 @@ export default function AuthPage() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [mode, setMode] = useState('login') // 🔥 login | signup
   const [loadingAuth, setLoadingAuth] = useState(false)
+  const [error, setError] = useState('')
   const [info, setInfo] = useState('')
 
+  // 🔹 Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
       navigate(user.username ? '/' : '/onboarding', { replace: true })
     }
   }, [user, loading])
 
+  // 🔹 Auth Handler
   const handleAuth = async () => {
     setError('')
     setInfo('')
@@ -34,25 +38,37 @@ export default function AuthPage() {
     try {
       setLoadingAuth(true)
 
-      let { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      if (mode === 'login') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
 
-      if (error && error.message.includes('Invalid login')) {
-        const res = await supabase.auth.signUp({ email, password })
-
-        if (res.error) throw res.error
-
-        setInfo('Check your email to verify your account')
-        return
+        if (error) {
+          if (error.message.includes('Invalid login')) {
+            setError('Invalid email or password')
+          } else if (error.message.includes('Email not confirmed')) {
+            setError('Please verify your email first')
+          } else {
+            setError(error.message)
+          }
+        }
       }
 
-      if (error) {
-        if (error.message.includes('Email not confirmed')) {
-          setError('Verify your email first')
+      if (mode === 'signup') {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+        })
+
+        if (error) {
+          if (error.message.includes('already registered')) {
+            setError('Account already exists')
+          } else {
+            setError(error.message)
+          }
         } else {
-          setError(error.message)
+          setInfo('Check your email to verify your account')
         }
       }
 
@@ -60,6 +76,23 @@ export default function AuthPage() {
       setError(err.message || 'Something went wrong')
     } finally {
       setLoadingAuth(false)
+    }
+  }
+
+  // 🔹 Forgot Password
+  const handleForgotPassword = async () => {
+    if (!email) {
+      return toast.error('Enter your email first')
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+
+    if (error) {
+      toast.error(error.message)
+    } else {
+      toast.success('Password reset email sent')
     }
   }
 
@@ -76,44 +109,90 @@ export default function AuthPage() {
           SyncStream
         </h1>
 
+        {/* 🔹 Tabs */}
+        <div className="flex rounded-lg overflow-hidden border">
+          <button
+            onClick={() => setMode('login')}
+            className={`flex-1 py-2 text-sm ${
+              mode === 'login'
+                ? 'bg-brand-purple text-white'
+                : 'bg-transparent'
+            }`}
+          >
+            Login
+          </button>
+          <button
+            onClick={() => setMode('signup')}
+            className={`flex-1 py-2 text-sm ${
+              mode === 'signup'
+                ? 'bg-brand-purple text-white'
+                : 'bg-transparent'
+            }`}
+          >
+            Sign Up
+          </button>
+        </div>
+
+        {/* 🔹 Email */}
         <input
           placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="w-full p-3 rounded-lg
             bg-white border border-gray-300
             dark:bg-white/10 dark:border-white/10"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
         />
 
+        {/* 🔹 Password */}
         <input
           type="password"
           placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="w-full p-3 rounded-lg
             bg-white border border-gray-300
             dark:bg-white/10 dark:border-white/10"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
         />
 
+        {/* 🔹 Forgot Password */}
+        {mode === 'login' && (
+          <div className="text-right">
+            <button
+              onClick={handleForgotPassword}
+              className="text-xs text-brand-purple hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
+        )}
+
+        {/* 🔹 Submit */}
         <button
           onClick={handleAuth}
           disabled={loadingAuth}
-          className="w-full bg-brand-purple text-white p-3 rounded-lg"
+          className="w-full bg-brand-purple text-white p-3 rounded-lg hover:opacity-90"
         >
-          {loadingAuth ? 'Processing...' : 'Continue'}
+          {loadingAuth
+            ? 'Processing...'
+            : mode === 'login'
+              ? 'Login'
+              : 'Create Account'}
         </button>
 
-        <div className="text-center text-gray-500 dark:text-gray-400">
+        {/* 🔹 Divider */}
+        <div className="text-center text-gray-500 dark:text-gray-400 text-sm">
           OR
         </div>
 
+        {/* 🔹 Google */}
         <button
           onClick={signInWithGoogle}
-          className="w-full bg-white text-black p-3 rounded-lg border"
+          className="w-full bg-white text-black p-3 rounded-lg border hover:bg-gray-50"
         >
           Continue with Google
         </button>
 
+        {/* 🔹 Feedback */}
         {error && <p className="text-red-500 text-sm">{error}</p>}
         {info && <p className="text-green-500 text-sm">{info}</p>}
       </div>

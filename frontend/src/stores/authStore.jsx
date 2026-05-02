@@ -12,7 +12,13 @@ export const useAuthStore = create((set, get) => ({
   theme: 'dark',
 
   // ✅ Set user manually (used in onboarding)
-  setUser: (user) => set({ user }),
+  setUser: (user) =>
+  set({
+    user: {
+      ...user,
+      is_onboarded: !!user?.username,
+    },
+  }),
 
   initAuth: async () => {
     set({ loading: true })

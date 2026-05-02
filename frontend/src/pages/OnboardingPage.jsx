@@ -85,10 +85,13 @@ const handleSubmit = async () => {
   try {
     setLoading(true)
 
-    let avatar_url = user?.avatar_url || null
+    let payload = {
+      username,
+      bio,
+    }
 
     if (avatar) {
-      avatar_url = await uploadToCloudinary(avatar)
+      payload.avatar_url = await uploadToCloudinary(avatar)
     }
 
     const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
@@ -97,19 +100,14 @@ const handleSubmit = async () => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        username,
-        bio,
-        avatar_url,
-      }),
+      body: JSON.stringify(payload),
     })
 
     if (!res.ok) throw new Error()
 
     const data = await res.json()
 
-    // ✅ DO NOT MERGE (this was your bug)
-    setUser(data.user)
+    setUser(data)
 
     navigate('/')
   } catch (err) {

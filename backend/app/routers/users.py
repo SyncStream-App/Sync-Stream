@@ -1,18 +1,10 @@
-# backend/app/routers/users.py
 from fastapi import APIRouter, HTTPException, Depends
 from app.services.supabase import supabase
 from app.services.jwt import verify_token
 
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.get("/")
-async def get_users():
-    """Test endpoint — returns all users. Remove before production."""
-    try:
-        response = supabase.table("users").select("*").execute()
-        return {"users": response.data, "count": len(response.data)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/check-username")
 async def check_username(username: str):
     if len(username) < 3 or len(username) > 20:
@@ -30,24 +22,40 @@ async def check_username(username: str):
 
     return {"available": len(response.data) == 0}
 
+
 @router.get("/{username}")
 async def get_user_by_username(username: str):
     response = (
         supabase.table("users")
-        .select("id, username, avatar_url, banner_url, bio, watch_hours, badges, created_at")
+        .select("id, username, avatar_url, email, bio, created_at")
         .eq("username", username)
+        .single()
         .execute()
     )
 
     if not response.data:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return {"user": response.data[0]}
-    
-    
+    return response.data   # ✅ IMPORTANT (not wrapped)
+
+
 @router.patch("/me")
 async def update_user(data: dict, user=Depends(verify_token)):
     user_id = user["sub"]
+
+    # ✅ Ensure user exists
+    existing = (
+        supabase.table("users")
+        .select("id")
+        .eq("id", user_id)
+        .execute()
+    )
+
+    if not existing.data:
+        supabase.table("users").insert({
+            "id": user_id,
+            "email": user.get("email"),
+        }).execute()
 
     update_data = {}
 
@@ -57,7 +65,6 @@ async def update_user(data: dict, user=Depends(verify_token)):
     if "bio" in data:
         update_data["bio"] = data["bio"]
 
-    # ✅ only update avatar if NOT null
     if data.get("avatar_url"):
         update_data["avatar_url"] = data["avatar_url"]
 
@@ -71,4 +78,4 @@ async def update_user(data: dict, user=Depends(verify_token)):
         .execute()
     )
 
-    return {"user": response.data[0]}
+    return response.data[0]

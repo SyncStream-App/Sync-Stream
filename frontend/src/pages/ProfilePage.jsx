@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const [avatar, setAvatar] = useState(null)
   const [preview, setPreview] = useState(null)
 
-  const isOwnProfile = user?.username === profile?.username
+  const isOwnProfile = user?.id === profile?.id
 
   // 🔹 Fetch profile
   useEffect(() => {
@@ -211,11 +211,9 @@ export default function ProfilePage() {
           <div className="flex gap-5 items-center">
             <img
               src={
-                profile.avatar_url ||
-                user?.avatar_url ||
-                user?.user_metadata?.avatar_url ||
-                'https://via.placeholder.com/100'
-              }
+                    profile.avatar_url ||
+                    'https://ui-avatars.com/api/?name=' + profile.username
+                  }
               className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover"
             />
 

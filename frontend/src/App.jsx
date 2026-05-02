@@ -6,6 +6,7 @@ import { useAuthStore } from './stores/authStore'
 import AuthPage      from './pages/AuthPage'
 import OnboardingPage from './pages/OnboardingPage'
 import HomePage       from './pages/HomePage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import RoomsPage      from './pages/RoomsPage'
 import MessagesPage   from './pages/MessagesPage'
 import SearchPage     from './pages/SearchPage'
@@ -70,6 +71,7 @@ export default function App() {
           }
         >
           <Route index element={<HomePage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path='rooms' element={<RoomsPage />} />
           <Route path='messages' element={<MessagesPage />} />
           <Route path='search' element={<SearchPage />} />
