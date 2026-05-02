@@ -51,14 +51,18 @@ async def update_user(data: dict, user=Depends(verify_token)):
 
     update_data = {}
 
-    if "username" in data:
+    if data.get("username"):
         update_data["username"] = data["username"]
 
     if "bio" in data:
         update_data["bio"] = data["bio"]
 
-    if "avatar_url" in data:
+    # ✅ only update avatar if NOT null
+    if data.get("avatar_url"):
         update_data["avatar_url"] = data["avatar_url"]
+
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields")
 
     response = (
         supabase.table("users")

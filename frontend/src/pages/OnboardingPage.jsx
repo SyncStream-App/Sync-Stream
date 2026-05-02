@@ -71,47 +71,54 @@ export default function OnboardingPage() {
     setPreview(URL.createObjectURL(file))
   }
 
-  const handleSubmit = async () => {
-    setError('')
+const handleSubmit = async () => {
+  setError('')
 
-    if (!username || username.length < 3) {
-      return setError('Username must be at least 3 characters')
-    }
-
-    if (available === false) {
-      return setError('Username is taken')
-    }
-
-    try {
-      setLoading(true)
-
-      let avatar_url = null
-      if (avatar) avatar_url = await uploadToCloudinary(avatar)
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ username, bio, avatar_url }),
-      })
-
-      const data = await res.json()
-
-      setUser({
-        ...(user || {}),
-        ...(data.user || {}),
-        is_onboarded: true,
-      })
-
-      navigate('/')
-    } catch {
-      setError('Something went wrong')
-    } finally {
-      setLoading(false)
-    }
+  if (!username || username.length < 3) {
+    return setError('Username must be at least 3 characters')
   }
+
+  if (available === false) {
+    return setError('Username is taken')
+  }
+
+  try {
+    setLoading(true)
+
+    let avatar_url = user?.avatar_url || null
+
+    if (avatar) {
+      avatar_url = await uploadToCloudinary(avatar)
+    }
+
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        username,
+        bio,
+        avatar_url,
+      }),
+    })
+
+    if (!res.ok) throw new Error()
+
+    const data = await res.json()
+
+    // ✅ DO NOT MERGE (this was your bug)
+    setUser(data.user)
+
+    navigate('/')
+  } catch (err) {
+    console.error(err)
+    setError('Something went wrong')
+  } finally {
+    setLoading(false)
+  }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4

@@ -1,9 +1,10 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '../stores/authStore'
 
 export default function ProfilePage() {
   const { username } = useParams()
+  const navigate = useNavigate()
   const { token, user, setUser } = useAuthStore()
 
   const [profile, setProfile] = useState(null)
@@ -17,7 +18,7 @@ export default function ProfilePage() {
   const [avatar, setAvatar] = useState(null)
   const [preview, setPreview] = useState(null)
 
-  const isOwnProfile = user?.username === username
+  const isOwnProfile = user?.username === profile?.username
 
   // 🔹 Fetch profile
   useEffect(() => {
@@ -36,10 +37,10 @@ export default function ProfilePage() {
 
         const data = await res.json()
 
-        setProfile(data.user)
+        setProfile(data)
         setForm({
-          username: data.user.username || '',
-          bio: data.user.bio || '',
+          username: data.username || '',
+          bio: data.bio || '',
         })
 
       } catch {
@@ -49,12 +50,18 @@ export default function ProfilePage() {
       }
     }
 
-    if (username) fetchProfile()
-  }, [username])
+    if (username && token) fetchProfile()
+  }, [username, token])
 
   // 🔹 Username availability
   useEffect(() => {
     if (!isEditing) return
+    if (!profile) return
+
+    if (form.username === profile.username) {
+      setAvailable(true)
+      return
+    }
 
     const delay = setTimeout(async () => {
       if (form.username.length >= 3) {
@@ -73,7 +80,7 @@ export default function ProfilePage() {
     }, 400)
 
     return () => clearTimeout(delay)
-  }, [form.username, isEditing])
+  }, [form.username, isEditing, profile])
 
   // 🔹 ESC close
   useEffect(() => {
@@ -84,6 +91,13 @@ export default function ProfilePage() {
     if (isEditing) window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
   }, [isEditing])
+
+  // 🔹 Cleanup preview URL
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview)
+    }
+  }, [preview])
 
   // 🔹 Upload
   const uploadToCloudinary = async (file) => {
@@ -121,45 +135,55 @@ export default function ProfilePage() {
 
   // 🔹 Update
   const handleUpdate = async () => {
-    if (available === false) {
-      return alert('Username already taken')
-    }
-
-    try {
-      let avatar_url = profile.avatar_url
-
-      if (avatar) {
-        avatar_url = await uploadToCloudinary(avatar)
-      }
-
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          username: form.username,
-          bio: form.bio,
-          avatar_url,
-        }),
-      })
-
-      if (!res.ok) throw new Error()
-
-      const data = await res.json()
-
-      setProfile(data.user)
-      setUser(data.user)
-
-      setIsEditing(false)
-      setAvatar(null)
-      setPreview(null)
-
-    } catch {
-      alert('Update failed')
-    }
+  if (
+    form.username !== profile.username &&
+    available === false
+  ) {
+    return alert('Username already taken')
   }
+
+  try {
+    let avatar_url = profile.avatar_url
+
+    if (avatar) {
+      avatar_url = await uploadToCloudinary(avatar)
+    }
+
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        username: form.username,
+        bio: form.bio,
+        avatar_url,
+      }),
+    })
+
+    if (!res.ok) throw new Error()
+
+    const data = await res.json()
+
+    const updatedUser = data.user
+
+    setProfile(updatedUser)
+    setUser(updatedUser)
+
+    setIsEditing(false)
+    setAvatar(null)
+    setPreview(null)
+
+    // ✅ THIS IS THE FIX
+    if (form.username !== username) {
+      navigate(`/profile/${updatedUser.username}`, { replace: true })
+    }
+
+  } catch {
+    alert('Update failed')
+  }
+}
 
   // 🔹 Loading
   if (loading) {
@@ -175,27 +199,38 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto px-4">
 
       {/* PROFILE */}
       <div className="p-6 rounded-2xl
         bg-gray-100 dark:bg-white/5
         border border-gray-200 dark:border-white/10">
 
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
           <div className="flex gap-5 items-center">
             <img
-              src={profile.avatar_url || 'https://via.placeholder.com/100'}
-              className="w-24 h-24 rounded-full object-cover"
+              src={
+                profile.avatar_url ||
+                user?.avatar_url ||
+                user?.user_metadata?.avatar_url ||
+                'https://via.placeholder.com/100'
+              }
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover"
             />
 
             <div>
-              <h1 className="text-2xl font-bold">{profile.username}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold">
+                {profile.username}
+              </h1>
+
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {profile.email}
               </p>
-              <p className="mt-2">{profile.bio || 'No bio'}</p>
+
+              <p className="mt-2 text-sm sm:text-base">
+                {profile.bio || 'No bio'}
+              </p>
             </div>
           </div>
 
@@ -213,14 +248,14 @@ export default function ProfilePage() {
       {/* MODAL */}
       {isEditing && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center"
-          onClick={() => setIsEditing(false)}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center px-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsEditing(false)
+          }}
         >
           <div
             className="bg-white dark:bg-black p-6 rounded-xl w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
           >
-
             <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
 
             <input
@@ -232,7 +267,7 @@ export default function ProfilePage() {
             {(preview || profile.avatar_url) && (
               <img
                 src={preview || profile.avatar_url}
-                className="w-20 h-20 rounded-full mb-3"
+                className="w-20 h-20 rounded-full mb-3 object-cover"
               />
             )}
 
