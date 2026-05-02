@@ -37,10 +37,10 @@ export default function ProfilePage() {
 
         const data = await res.json()
 
-        setProfile(data)
+        setProfile(data.user)
         setForm({
-          username: data.username || '',
-          bio: data.bio || '',
+          username: data.user.username || '',
+          bio: data.user.bio || '',
         })
 
       } catch {
@@ -70,7 +70,7 @@ export default function ProfilePage() {
             `${import.meta.env.VITE_API_URL}/users/check-username?username=${form.username}`
           )
           const data = await res.json()
-          setAvailable(data.available)
+          setAvailable(data.user.available)
         } catch {
           setAvailable(null)
         }
@@ -114,7 +114,7 @@ export default function ProfilePage() {
     )
 
     const data = await res.json()
-    return data.secure_url
+    return data.user.secure_url
   }
 
   // 🔹 Avatar handler
