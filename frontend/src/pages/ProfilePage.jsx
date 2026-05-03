@@ -22,44 +22,40 @@ export default function ProfilePage() {
 
   // 🔹 Fetch profile
   useEffect(() => {
-  const fetchProfile = async () => {
-    try {
-      setLoading(true)
+    const fetchProfile = async () => {
+      try {
+        setLoading(true)
 
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/users/${username}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/users/${username}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
 
-      if (!res.ok) throw new Error()
+        if (!res.ok) throw new Error()
 
-      const data = await res.json()
+        const data = await res.json()
 
-      setProfile(data)
-      setForm({
-        username: data.username || '',
-        bio: data.bio || '',
-      })
-
-    } catch (err) {
-      console.error(err)
-      setError('Failed to load profile')
-    } finally {
-      setLoading(false)
+        setProfile(data)
+        setForm({
+          username: data.username || '',
+          bio: data.bio || '',
+        })
+      } catch (err) {
+        console.error(err)
+        setError('Failed to load profile')
+      } finally {
+        setLoading(false)
+      }
     }
-  }
 
-  if (username && token) fetchProfile()
-}, [username, token])
+    if (username && token) fetchProfile()
+  }, [username, token])
 
   // 🔹 Username availability
   useEffect(() => {
-    if (!isEditing) return
-    if (!profile) return
+    if (!isEditing || !profile) return
 
     if (form.username === profile.username) {
       setAvailable(true)
@@ -95,7 +91,7 @@ export default function ProfilePage() {
     return () => window.removeEventListener('keydown', handleEsc)
   }, [isEditing])
 
-  // 🔹 Cleanup preview URL
+  // 🔹 Cleanup preview
   useEffect(() => {
     return () => {
       if (preview) URL.revokeObjectURL(preview)
@@ -136,57 +132,65 @@ export default function ProfilePage() {
     setPreview(URL.createObjectURL(file))
   }
 
-  // 🔹 Update
+  // 🔹 Update profile
   const handleUpdate = async () => {
-  if (
-    form.username !== profile.username &&
-    available === false
-  ) {
-    return alert('Username already taken')
-  }
-
-  try {
-    let avatar_url = profile.avatar_url
-
-    if (avatar) {
-      avatar_url = await uploadToCloudinary(avatar)
+    if (
+      form.username !== profile.username &&
+      available === false
+    ) {
+      return alert('Username already taken')
     }
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        username: form.username,
-        bio: form.bio,
-        avatar_url,
-      }),
-    })
+    try {
+      let avatar_url = profile.avatar_url
 
-    if (!res.ok) throw new Error()
+      if (avatar) {
+        try {
+          avatar_url = await uploadToCloudinary(avatar)
+        } catch {
+          return alert('Image upload failed')
+        }
+      }
 
-    const data = await res.json()
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          username: form.username,
+          bio: form.bio,
+          avatar_url,
+        }),
+      })
 
-    const updatedUser = data.user
+      if (!res.ok) throw new Error()
 
-    setProfile(updatedUser)
-    setUser(updatedUser)
+      const data = await res.json()
 
-    setIsEditing(false)
-    setAvatar(null)
-    setPreview(null)
+      const updatedUser = {
+        ...user,
+        ...data.user,
+      }
 
-    // ✅ THIS IS THE FIX
-    if (form.username !== username) {
-      navigate(`/profile/${updatedUser.username}`, { replace: true })
+      setProfile(updatedUser)
+      setUser(updatedUser)
+
+      setIsEditing(false)
+      setAvatar(null)
+      setPreview(null)
+
+      // redirect if username changed
+      if (form.username !== username) {
+        navigate(`/profile/${updatedUser.username}`, { replace: true })
+      }
+
+    } catch (err) {
+      console.error(err)
+      alert('Update failed')
     }
-
-  } catch {
-    alert('Update failed')
   }
-}
 
   // 🔹 Loading
   if (loading) {
@@ -205,33 +209,23 @@ export default function ProfilePage() {
     <div className="max-w-3xl mx-auto px-4">
 
       {/* PROFILE */}
-      <div className="p-6 rounded-2xl
-        bg-gray-100 dark:bg-white/5
-        border border-gray-200 dark:border-white/10">
+      <div className="p-6 rounded-2xl bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
           <div className="flex gap-5 items-center">
             <img
               src={
-                    profile.avatar_url ||
-                    'https://ui-avatars.com/api/?name=' + profile.username
-                  }
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover"
+                profile.avatar_url ||
+                `https://ui-avatars.com/api/?name=${profile.username}`
+              }
+              className="w-20 h-20 rounded-full object-cover"
             />
 
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold">
-                {profile.username}
-              </h1>
-
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {profile.email}
-              </p>
-
-              <p className="mt-2 text-sm sm:text-base">
-                {profile.bio || 'No bio'}
-              </p>
+              <h1 className="text-xl font-bold">{profile.username}</h1>
+              <p className="text-sm text-gray-500">{profile.email}</p>
+              <p className="mt-2">{profile.bio || 'No bio'}</p>
             </div>
           </div>
 
@@ -246,21 +240,18 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* MODAL */}
+      {/* EDIT MODAL */}
       {isEditing && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center px-4"
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center px-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsEditing(false)
           }}
         >
-          <div
-            className="bg-white dark:bg-black p-6 rounded-xl w-full max-w-md"
-          >
+          <div className="bg-white dark:bg-black p-6 rounded-xl w-full max-w-md">
+
             <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
 
-            <input
-              type="file"
+            <input type="file"
               onChange={(e) => handleAvatar(e.target.files[0])}
               className="mb-3"
             />
@@ -277,29 +268,22 @@ export default function ProfilePage() {
               onChange={(e) =>
                 setForm({ ...form, username: e.target.value })
               }
-              className="w-full p-2 mb-2 rounded bg-gray-200 dark:bg-white/10"
+              className="w-full p-2 mb-2 rounded bg-gray-200"
             />
 
-            {available === true && (
-              <p className="text-green-400 text-sm">Available</p>
-            )}
-            {available === false && (
-              <p className="text-red-400 text-sm">Taken</p>
-            )}
+            {available === true && <p className="text-green-500">Available</p>}
+            {available === false && <p className="text-red-500">Taken</p>}
 
             <textarea
               value={form.bio}
               onChange={(e) =>
                 setForm({ ...form, bio: e.target.value })
               }
-              className="w-full p-2 mb-4 rounded bg-gray-200 dark:bg-white/10"
+              className="w-full p-2 mb-4 rounded bg-gray-200"
             />
 
             <div className="flex justify-end gap-2">
-              <button onClick={() => setIsEditing(false)}>
-                Cancel
-              </button>
-
+              <button onClick={() => setIsEditing(false)}>Cancel</button>
               <button
                 onClick={handleUpdate}
                 className="bg-brand-purple text-white px-3 py-2 rounded"

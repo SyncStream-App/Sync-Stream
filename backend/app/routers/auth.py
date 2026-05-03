@@ -36,6 +36,7 @@ async def auth_callback(data: AuthRequest):
                 "id": supabase_user.id,
                 "email": supabase_user.email,
                 "avatar_url": metadata.get("avatar_url"),
+                "username": metadata.get("username")  # 🔥 ADD THIS
             }, on_conflict="id")
             .execute()
         )
