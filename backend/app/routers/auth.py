@@ -29,12 +29,6 @@ async def auth_callback(data: AuthRequest):
         # ✅ Extract metadata safely
         metadata = supabase_user.user_metadata or {}
 
-        user_data = {
-            "id": supabase_user.id,
-            "email": supabase_user.email,
-            "avatar_url": metadata.get("avatar_url"),
-        }
-
         # ✅ UPSERT (no duplicates)
         result = (
             supabase.table("users")
