@@ -73,7 +73,7 @@ export default function App() {
         >
           <Route index element={<HomePage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path='feeds' element={<FeedPage />} />
+          <Route path='posts' element={<FeedPage />} />
           <Route path='rooms' element={<RoomsPage />} />
           <Route path='messages' element={<MessagesPage />} />
           <Route path='search' element={<SearchPage />} />
