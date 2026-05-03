@@ -36,7 +36,7 @@ async def get_user_by_username(username: str):
     if not response.data:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return {"user": response.data}   # ✅ IMPORTANT (not wrapped)
+    return response.data   # ✅ IMPORTANT (not wrapped)
 
 
 @router.patch("/me")
@@ -78,4 +78,4 @@ async def update_user(data: dict, user=Depends(verify_token)):
         .execute()
     )
 
-    return {"user": response.data}
+    return response.data[0]

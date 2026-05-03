@@ -26,16 +26,25 @@ export default function ProfilePage() {
       try {
         setLoading(true)
 
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/users/${username}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            username: form.username,
+            bio: form.bio,
+            avatar_url,
+          }),
+        })
 
-        if (!res.ok) throw new Error()
+        const text = await res.text()
+        console.log("UPDATE RESPONSE:", res.status, text)
 
-        const data = await res.json()
+        if (!res.ok) throw new Error(text)
+
+        const data = JSON.parse(text)
 
         setProfile(data.user)
         setForm({

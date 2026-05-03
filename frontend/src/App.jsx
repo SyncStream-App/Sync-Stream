@@ -8,6 +8,7 @@ import OnboardingPage from './pages/OnboardingPage'
 import HomePage       from './pages/HomePage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import RoomsPage      from './pages/RoomsPage'
+import FeedPage from './pages/FeedPage'
 import MessagesPage   from './pages/MessagesPage'
 import SearchPage     from './pages/SearchPage'
 import ProfilePage    from './pages/ProfilePage'
@@ -72,6 +73,7 @@ export default function App() {
         >
           <Route index element={<HomePage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path='feeds' element={<FeedPage />} />
           <Route path='rooms' element={<RoomsPage />} />
           <Route path='messages' element={<MessagesPage />} />
           <Route path='search' element={<SearchPage />} />
