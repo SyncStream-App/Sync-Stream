@@ -51,6 +51,13 @@ export default function AppShell() {
               💬 Messages
             </NavLink>
 
+            <NavLink to="/feeds"
+              className={({ isActive }) =>
+                `${base} ${isActive ? active : inactive}`
+              }>
+              💬 Feed
+            </NavLink>
+
             <NavLink to="/search"
               className={({ isActive }) =>
                 `${base} ${isActive ? active : inactive}`
