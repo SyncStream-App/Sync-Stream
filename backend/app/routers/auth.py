@@ -38,7 +38,11 @@ async def auth_callback(data: AuthRequest):
         # ✅ UPSERT (no duplicates)
         result = (
             supabase.table("users")
-            .upsert(user_data, on_conflict="id")
+            .upsert({
+                "id": supabase_user.id,
+                "email": supabase_user.email,
+                "avatar_url": metadata.get("avatar_url"),
+            }, on_conflict="id")
             .execute()
         )
 

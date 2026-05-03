@@ -22,45 +22,39 @@ export default function ProfilePage() {
 
   // 🔹 Fetch profile
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        setLoading(true)
+  const fetchProfile = async () => {
+    try {
+      setLoading(true)
 
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-          method: 'PATCH',
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/users/${username}`,
+        {
           headers: {
-            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            username: form.username,
-            bio: form.bio,
-            avatar_url,
-          }),
-        })
+        }
+      )
 
-        const text = await res.text()
-        console.log("UPDATE RESPONSE:", res.status, text)
+      if (!res.ok) throw new Error()
 
-        if (!res.ok) throw new Error(text)
+      const data = await res.json()
 
-        const data = JSON.parse(text)
+      setProfile(data)
+      setForm({
+        username: data.username || '',
+        bio: data.bio || '',
+      })
 
-        setProfile(data.user)
-        setForm({
-          username: data.user.username || '',
-          bio: data.user.bio || '',
-        })
-
-      } catch {
-        setError('Failed to load profile')
-      } finally {
-        setLoading(false)
-      }
+    } catch (err) {
+      console.error(err)
+      setError('Failed to load profile')
+    } finally {
+      setLoading(false)
     }
+  }
 
-    if (username && token) fetchProfile()
-  }, [username, token])
+  if (username && token) fetchProfile()
+}, [username, token])
 
   // 🔹 Username availability
   useEffect(() => {
@@ -79,7 +73,7 @@ export default function ProfilePage() {
             `${import.meta.env.VITE_API_URL}/users/check-username?username=${form.username}`
           )
           const data = await res.json()
-          setAvailable(data.user.available)
+          setAvailable(data.available)
         } catch {
           setAvailable(null)
         }
@@ -123,7 +117,7 @@ export default function ProfilePage() {
     )
 
     const data = await res.json()
-    return data.user.secure_url
+    return data.secure_url
   }
 
   // 🔹 Avatar handler
