@@ -43,7 +43,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(media.router)
-app.include_router(follows.py)
+app.include_router(follows.router)
 app.include_router(posts.router)
 
 @app.get("/")
