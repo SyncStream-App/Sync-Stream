@@ -1,6 +1,8 @@
-import os
+# app/routers/auth.py
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
 from app.services.supabase import supabase
 from app.services.jwt import create_access_token
 
@@ -16,34 +18,50 @@ async def auth_callback(data: AuthRequest):
     access_token = data.access_token
 
     if not access_token:
-        raise HTTPException(status_code=400, detail="No access token provided")
+        raise HTTPException(
+            status_code=400,
+            detail="No access token provided"
+        )
 
     try:
-        # ✅ Verify Supabase token
+        # =========================
+        # VERIFY SUPABASE USER
+        # =========================
         auth_response = supabase.auth.get_user(access_token)
+
         supabase_user = auth_response.user
 
         if not supabase_user:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token"
+            )
 
-        # ✅ Extract metadata safely
         metadata = supabase_user.user_metadata or {}
 
-        # ✅ UPSERT (no duplicates)
+        # =========================
+        # UPSERT USER
+        # =========================
         result = (
             supabase.table("users")
-            .upsert({
-                "id": supabase_user.id,
-                "email": supabase_user.email,
-                "avatar_url": metadata.get("avatar_url"),
-                "username": metadata.get("username")  # 🔥 ADD THIS
-            }, on_conflict="id")
+            .upsert(
+                {
+                    "id": supabase_user.id,
+                    "email": supabase_user.email,
+                    "username": metadata.get("username"),
+                    "avatar_url": metadata.get("avatar_url"),
+                    "banner_url": metadata.get("banner_url"),
+                },
+                on_conflict="id"
+            )
             .execute()
         )
 
         db_user = result.data[0]
 
-        # ✅ Create your JWT
+        # =========================
+        # APP JWT
+        # =========================
         token = create_access_token({
             "sub": db_user["id"],
             "email": db_user["email"],
@@ -52,23 +70,35 @@ async def auth_callback(data: AuthRequest):
         return {
             "access_token": token,
             "token_type": "bearer",
+
             "user": {
                 "id": db_user["id"],
                 "email": db_user.get("email"),
                 "username": db_user.get("username"),
-                "avatar_url": db_user.get("avatar_url"),
                 "bio": db_user.get("bio"),
-                "is_onboarded": bool(db_user.get("username")),
-            },
+                "avatar_url": db_user.get("avatar_url"),
+                "banner_url": db_user.get("banner_url"),
+
+                "is_onboarded": bool(
+                    db_user.get("username")
+                ),
+            }
         }
 
     except HTTPException:
         raise
+
     except Exception as e:
-        print("Auth callback error:", str(e))
-        raise HTTPException(status_code=500, detail="Internal server error")
+        print("AUTH CALLBACK ERROR:", str(e))
+
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
 
 
 @router.post("/signout")
 async def signout():
-    return {"message": "Signed out"}
+    return {
+        "message": "Signed out"
+    }
