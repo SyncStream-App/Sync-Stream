@@ -16,14 +16,30 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // =========================
+  // REDIRECT IF ALREADY ONBOARDED
+  // =========================
+  useEffect(() => {
+    if (user?.username) {
+      navigate('/', { replace: true })
+    }
+  }, [user])
+
+  // =========================
+  // USERNAME AVAILABILITY CHECK
+  // =========================
   useEffect(() => {
     const delay = setTimeout(async () => {
-      if (username.length >= 3) {
+      const cleanUsername = username.trim().toLowerCase()
+
+      if (cleanUsername.length >= 3) {
         try {
           const res = await fetch(
-            `${import.meta.env.VITE_API_URL}/users/check-username?username=${username}`
+            `${import.meta.env.VITE_API_URL}/users/check-username?username=${cleanUsername}`
           )
+
           const data = await res.json()
+
           setAvailable(data.available)
         } catch {
           setAvailable(null)
@@ -36,9 +52,14 @@ export default function OnboardingPage() {
     return () => clearTimeout(delay)
   }, [username])
 
+  // =========================
+  // CLOUDINARY UPLOAD
+  // =========================
   const uploadToCloudinary = async (file) => {
     const formData = new FormData()
+
     formData.append('file', file)
+
     formData.append(
       'upload_preset',
       import.meta.env.VITE_CLOUDINARY_AVATAR_PRESET
@@ -52,12 +73,22 @@ export default function OnboardingPage() {
       }
     )
 
+    if (!res.ok) {
+      throw new Error('Upload failed')
+    }
+
     const data = await res.json()
+
     return data.secure_url
   }
 
+  // =========================
+  // HANDLE AVATAR
+  // =========================
   const handleAvatar = (file) => {
     if (!file) return
+
+    setError('')
 
     if (!file.type.startsWith('image/')) {
       return setError('Only image files allowed')
@@ -71,111 +102,182 @@ export default function OnboardingPage() {
     setPreview(URL.createObjectURL(file))
   }
 
-const handleSubmit = async () => {
-  setError('')
+  // =========================
+  // SUBMIT
+  // =========================
+  const handleSubmit = async () => {
+    setError('')
 
-  if (!username || username.length < 3) {
-    return setError('Username must be at least 3 characters')
-  }
+    const cleanUsername = username.trim().toLowerCase()
 
-  if (available === false) {
-    return setError('Username is taken')
-  }
-
-  try {
-    setLoading(true)
-
-    let payload = {
-      username,
-      bio,
+    if (!cleanUsername || cleanUsername.length < 3) {
+      return setError('Username must be at least 3 characters')
     }
 
-    if (avatar) {
-      payload.avatar_url = await uploadToCloudinary(avatar)
+    if (!cleanUsername.replace(/_/g, '').match(/^[a-zA-Z0-9]+$/)) {
+      return setError(
+        'Username can only contain letters, numbers, and underscores'
+      )
     }
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    })
+    if (available === false) {
+      return setError('Username is already taken')
+    }
 
-    if (!res.ok) throw new Error()
+    try {
+      setLoading(true)
 
-    const data = await res.json()
+      let avatar_url = null
 
-    setUser(data)
+      if (avatar) {
+        avatar_url = await uploadToCloudinary(avatar)
+      }
 
-    navigate('/')
-  } catch (err) {
-    console.error(err)
-    setError('Something went wrong')
-  } finally {
-    setLoading(false)
+      const payload = {
+        username: cleanUsername,
+        bio,
+      }
+
+      if (avatar_url) {
+        payload.avatar_url = avatar_url
+      }
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/users/me`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      )
+
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.detail || 'Failed to update profile')
+      }
+
+      const data = await res.json()
+
+      // IMPORTANT FIX
+      setUser({
+        ...user,
+        ...data.user,
+      })
+
+      navigate('/', {
+        replace: true,
+      })
+
+    } catch (err) {
+      console.error(err)
+
+      setError(
+        err.message || 'Something went wrong'
+      )
+    } finally {
+      setLoading(false)
+    }
   }
-}
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4
+    <div
+      className="min-h-screen flex items-center justify-center px-4
       bg-white text-black
-      dark:bg-brand-dark dark:text-white">
+      dark:bg-brand-dark dark:text-white"
+    >
 
-      <div className="w-full max-w-md p-6 rounded-2xl border space-y-5
+      <div
+        className="w-full max-w-md p-6 rounded-2xl border space-y-5
         bg-gray-100 border-gray-200
-        dark:bg-white/5 dark:border-white/10">
+        dark:bg-white/5 dark:border-white/10"
+      >
 
-        <h1 className="text-2xl font-bold text-center text-brand-purple">
+        <h1 className="text-3xl font-bold text-center text-brand-purple">
           Complete your profile
         </h1>
 
-        {/* Username */}
-        <input
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-3 rounded-lg
-            bg-white border border-gray-300
-            dark:bg-white/10 dark:border-white/10"
-        />
+        <p className="text-center text-sm text-gray-500">
+          Set up your SyncStream identity
+        </p>
 
-        {available === true && (
-          <p className="text-green-500 text-sm">Available</p>
-        )}
-        {available === false && (
-          <p className="text-red-500 text-sm">Taken</p>
-        )}
+        {/* AVATAR */}
+        <div className="flex flex-col items-center gap-4">
 
-        {/* Bio */}
+          <div className="relative">
+
+            <img
+              src={
+                preview ||
+                `https://ui-avatars.com/api/?name=${username || 'User'}`
+              }
+              className="w-24 h-24 rounded-full object-cover border-4 border-brand-purple"
+            />
+
+          </div>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleAvatar(e.target.files[0])}
+            className="text-sm"
+          />
+
+        </div>
+
+        {/* USERNAME */}
+        <div>
+
+          <input
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full p-3 rounded-lg
+              bg-white border border-gray-300
+              dark:bg-white/10 dark:border-white/10"
+          />
+
+          {available === true && (
+            <p className="text-green-500 text-sm mt-2">
+              Username available
+            </p>
+          )}
+
+          {available === false && (
+            <p className="text-red-500 text-sm mt-2">
+              Username already taken
+            </p>
+          )}
+
+        </div>
+
+        {/* BIO */}
         <textarea
           placeholder="Bio (optional)"
           value={bio}
+          rows={4}
           onChange={(e) => setBio(e.target.value)}
           className="w-full p-3 rounded-lg
             bg-white border border-gray-300
             dark:bg-white/10 dark:border-white/10"
         />
 
-        {/* Avatar */}
-        <input type="file" onChange={(e) => handleAvatar(e.target.files[0])} />
-
-        {preview && (
-          <img
-            src={preview}
-            className="w-20 h-20 rounded-full object-cover"
-          />
+        {/* ERROR */}
+        {error && (
+          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+            {error}
+          </div>
         )}
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-
+        {/* BUTTON */}
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-brand-purple text-white p-3 rounded-lg"
+          className="w-full bg-brand-purple hover:opacity-90 transition text-white p-3 rounded-lg font-semibold"
         >
-          {loading ? 'Saving...' : 'Finish'}
+          {loading ? 'Saving...' : 'Finish Setup'}
         </button>
 
       </div>
