@@ -278,9 +278,14 @@ async def update_user(
             status_code=500,
             detail="Update failed"
         )
+    
+    updated_user = response.data[0]
 
     return {
-        "user": response.data[0]
+        "user": {
+            **updated_user,
+            "is_onboarded": bool(updated_user.get("username"))
+        }
     }
 
 
@@ -390,3 +395,38 @@ async def get_following(user_id: str):
             following.append(item["users"])
 
     return following
+
+@router.get("/suggested")
+async def suggested_users(
+    user=Depends(verify_token)
+):
+    user_id = user["sub"]
+
+    follows = (
+        supabase.table("follows")
+        .select("following_id")
+        .eq("follower_id", user_id)
+        .execute()
+    )
+
+    following_ids = [
+        item["following_id"]
+        for item in follows.data
+    ]
+
+    following_ids.append(user_id)
+
+    response = (
+        supabase.table("users")
+        .select("""
+            id,
+            username,
+            avatar_url,
+            bio
+        """)
+        .not_.in_("id", following_ids)
+        .limit(5)
+        .execute()
+    )
+
+    return response.data

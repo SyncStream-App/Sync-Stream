@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import users, auth, media, follows, posts
+from app.routers import users, auth, media, follows, posts, stories
 
 load_dotenv()
 
@@ -45,6 +45,7 @@ app.include_router(users.router)
 app.include_router(media.router)
 app.include_router(follows.router)
 app.include_router(posts.router)
+app.include_router(stories.router)
 
 @app.get("/")
 async def health_check():

@@ -31,7 +31,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user) return <Navigate to='/login' replace />
-  if (!user.username) return <Navigate to='/onboarding' replace />
+  if (!user?.username) return <Navigate to='/onboarding' replace />
 
   return children
 }

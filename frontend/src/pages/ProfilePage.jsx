@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
+import { toast } from 'sonner'
 
 export default function ProfilePage() {
   const { username } = useParams()
@@ -76,7 +77,7 @@ export default function ProfilePage() {
 
     } catch (err) {
       console.error(err)
-      setError('Failed to load profile')
+      toast.error('Failed to load following')
     } finally {
       setLoading(false)
     }
@@ -156,7 +157,7 @@ export default function ProfilePage() {
         form.username !== profile.username &&
         usernameAvailable === false
       ) {
-        alert('Username already taken')
+        toast.error('Username already taken')
         return
       }
 
@@ -202,6 +203,8 @@ export default function ProfilePage() {
         ...data.user,
       })
 
+      toast.success('Profile updated successfully')
+
       setIsEditing(false)
 
       setAvatarFile(null)
@@ -218,7 +221,7 @@ export default function ProfilePage() {
 
     } catch (err) {
       console.error(err)
-      alert('Failed to update profile')
+      toast.error('Failed to update profile')
     } finally {
       setSaving(false)
     }
@@ -254,8 +257,13 @@ export default function ProfilePage() {
         throw new Error()
       }
 
+      toast.success(
+        currentlyFollowing ? 'Unfollowed user' : 'Started following'
+      )
+
     } catch {
       fetchProfile()
+      toast.error('Failed to load followers')
     }
   }
 
@@ -277,6 +285,7 @@ export default function ProfilePage() {
 
     } catch (err) {
       console.error(err)
+      toast.error('Failed to load following')
     }
   }
 
@@ -298,6 +307,7 @@ export default function ProfilePage() {
 
     } catch (err) {
       console.error(err)
+      toast.error('Failed to load following')
     }
   }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../stores/authStore'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 export default function OnboardingPage() {
   const { token, user, setUser } = useAuthStore()
@@ -14,7 +15,7 @@ export default function OnboardingPage() {
   const [preview, setPreview] = useState(null)
 
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+
 
   // =========================
   // REDIRECT IF ALREADY ONBOARDED
@@ -88,14 +89,12 @@ export default function OnboardingPage() {
   const handleAvatar = (file) => {
     if (!file) return
 
-    setError('')
-
     if (!file.type.startsWith('image/')) {
-      return setError('Only image files allowed')
+      return toast.error('Only image files allowed')
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      return setError('Max size is 5MB')
+      return toast.error('Max size is 5MB')
     }
 
     setAvatar(file)
@@ -106,22 +105,21 @@ export default function OnboardingPage() {
   // SUBMIT
   // =========================
   const handleSubmit = async () => {
-    setError('')
 
     const cleanUsername = username.trim().toLowerCase()
 
     if (!cleanUsername || cleanUsername.length < 3) {
-      return setError('Username must be at least 3 characters')
+      return toast.error('Username must be at least 3 characters')
     }
 
     if (!cleanUsername.replace(/_/g, '').match(/^[a-zA-Z0-9]+$/)) {
-      return setError(
+      return toast.error(
         'Username can only contain letters, numbers, and underscores'
       )
     }
 
     if (available === false) {
-      return setError('Username is already taken')
+      return toast.error('Username is already taken')
     }
 
     try {
@@ -167,6 +165,8 @@ export default function OnboardingPage() {
         ...data.user,
       })
 
+      toast.success('Profile setup completed')
+
       navigate('/', {
         replace: true,
       })
@@ -174,7 +174,7 @@ export default function OnboardingPage() {
     } catch (err) {
       console.error(err)
 
-      setError(
+      toast.error(
         err.message || 'Something went wrong'
       )
     } finally {

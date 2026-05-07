@@ -78,6 +78,7 @@ async def auth_callback(data: AuthRequest):
                 "bio": db_user.get("bio"),
                 "avatar_url": db_user.get("avatar_url"),
                 "banner_url": db_user.get("banner_url"),
+                "display_name": db_user.get("display_name"),
 
                 "is_onboarded": bool(
                     db_user.get("username")
